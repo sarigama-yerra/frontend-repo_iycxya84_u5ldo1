@@ -1,69 +1,78 @@
+import { useState } from 'react'
+import Navbar from './components/Navbar'
+import LeftSidebar from './components/LeftSidebar'
+import RightPanel from './components/RightPanel'
+import Planner from './components/Planner'
+import Templates from './components/Templates'
+import HistoryPage from './components/HistoryPage'
+import Analytics from './components/Analytics'
+import Settings from './components/Settings'
+
 function App() {
+  const [activeTab, setActiveTab] = useState('planner')
+  const [leftOpen, setLeftOpen] = useState(true)
+  const [rightOpen, setRightOpen] = useState(true)
+  const [theme, setTheme] = useState('dark')
+  const [model, setModel] = useState('Mixtral 8x7B')
+
+  const renderView = () => {
+    switch (activeTab) {
+      case 'dashboard':
+        return (
+          <div className="pt-20 px-4 lg:px-6 max-w-7xl mx-auto">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/80">
+              Welcome to FlowGen AI. Use the planner to generate structured execution plans and code.
+            </div>
+          </div>
+        )
+      case 'templates':
+        return <Templates onUse={() => setActiveTab('planner')} />
+      case 'history':
+        return <HistoryPage />
+      case 'analytics':
+        return <Analytics />
+      case 'settings':
+        return <Settings />
+      case 'planner':
+      default:
+        return <Planner />
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Subtle pattern overlay */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.05),transparent_50%)]"></div>
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#0b0f17]' : 'bg-white'} relative`}> 
+      {/* Background gradients */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-32 -left-32 h-96 w-96 rounded-full bg-gradient-to-br from-indigo-600/20 via-purple-600/20 to-amber-400/20 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-72 w-72 rounded-full bg-gradient-to-tr from-indigo-600/10 via-purple-600/10 to-amber-400/10 blur-2xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.06),transparent_60%)]" />
+      </div>
 
-      <div className="relative min-h-screen flex items-center justify-center p-8">
-        <div className="max-w-2xl w-full">
-          {/* Header with Flames icon */}
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center justify-center mb-6">
-              <img
-                src="/flame-icon.svg"
-                alt="Flames"
-                className="w-24 h-24 drop-shadow-[0_0_25px_rgba(59,130,246,0.5)]"
-              />
-            </div>
+      {/* Top navigation */}
+      <Navbar
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        theme={theme}
+        onToggleSidebar={() => setLeftOpen(v => !v)}
+        onToggleRightbar={() => setRightOpen(v => !v)}
+        onThemeToggle={() => setTheme(t => (t === 'dark' ? 'light' : 'dark'))}
+        selectedModel={model}
+        onModelChange={setModel}
+      />
 
-            <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
-              Flames Blue
-            </h1>
+      {/* Sidebars */}
+      <LeftSidebar open={leftOpen} selectedModel={model} onModelChange={setModel} />
+      <RightPanel open={rightOpen} />
 
-            <p className="text-xl text-blue-200 mb-6">
-              Build applications through conversation
-            </p>
-          </div>
+      {/* Main content area with responsive gutters so fixed sidebars don’t overlap on desktop */}
+      <main className={`relative transition-[padding] duration-300 pt-16 ${leftOpen ? 'lg:pl-80' : 'lg:pl-0'} ${rightOpen ? 'lg:pr-96' : 'lg:pr-0'}`}>
+        {renderView()}
+      </main>
 
-          {/* Instructions */}
-          <div className="bg-slate-800/50 backdrop-blur-sm border border-blue-500/20 rounded-2xl p-8 shadow-xl mb-6">
-            <div className="flex items-start gap-4 mb-6">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                1
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Describe your idea</h3>
-                <p className="text-blue-200/80 text-sm">Use the chat panel on the left to tell the AI what you want to build</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4 mb-6">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                2
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Watch it build</h3>
-                <p className="text-blue-200/80 text-sm">Your app will appear in this preview as the AI generates the code</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center font-bold">
-                3
-              </div>
-              <div>
-                <h3 className="font-semibold text-white mb-1">Refine and iterate</h3>
-                <p className="text-blue-200/80 text-sm">Continue the conversation to add features and make changes</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="text-center">
-            <p className="text-sm text-blue-300/60">
-              No coding required • Just describe what you want
-            </p>
-          </div>
+      {/* Footer micro status bar (tokens/cost quick view on very bottom for large screens) */}
+      <div className="hidden lg:flex fixed bottom-4 left-1/2 -translate-x-1/2 z-20">
+        <div className="rounded-full px-4 py-2 bg-white/5 border border-white/10 backdrop-blur-md text-white/70 text-sm shadow">
+          Model: {model} • Session tokens: 4.8K • Est. cost: $0.012
         </div>
       </div>
     </div>
